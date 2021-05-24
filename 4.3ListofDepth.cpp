@@ -1,4 +1,6 @@
 #include <iostream>
+#include <vector>
+#include <unordered_map>
 using namespace std;
 
 // Data structure to store a binary tree node
@@ -49,46 +51,60 @@ Node* findNextNode(Node* root)
     return findNextNode(root->next);
 }
 
-// Recursive function to link nodes present in each level of a binary tree
-// in the form of a linked list
-void linkNodes(Node* root)
+// Function to traverse the nodes in a preorder fashion and
+// insert all nodes into the map corresponding to their level
+void linkNodes(Node* root, int level, auto &map)
 {
-    // base case
+    // base case: empty subtree
     if (root == nullptr) {
         return;
     }
 
-    // ensure that the nodes of the current level are linked before the
-    // next level nodes
-    linkNodes(root->next);
+    // insert the current node and level information into the map
+    map[level].push_back(root);
 
-    // Update the next pointer of root's left child to root's right child.
-    // If the right child doesn't exist, link it to the first node in the next level.
-    if (root->left) {
-        root->left->next = (root->right)? root->right: findNextNode(root);
-    }
-
-    // update the next pointer of the root's right child to the first node
-    // in the next level
-    if (root->right) {
-        root->right->next = findNextNode(root);
-    }
-
-    // recur for the left and right subtree
-    linkNodes(root->left);
-    linkNodes(root->right);
+    // recur for the left and right subtree by increasing the level by 1
+    linkNodes(root->left, level + 1, map);
+    linkNodes(root->right, level + 1, map);
 }
+
+// Function to link nodes present in each level of a binary tree
+// using the next pointer
+void linkNodes(Node* root)
+{
+    // create an empty map to store nodes present at each level
+    // from left to right
+    unordered_map<int, vector<Node*>> map;
+
+    // traverse the tree in a preorder fashion and fill the map
+    linkNodes(root, 1, map);
+
+    // iterate through the map, and for each level,
+    // set the next node for every node in it
+    for (auto it: map)
+    {
+        Node* prev = nullptr;
+        for (Node* curr: it.second)
+        {
+            if (prev) {
+                prev->next = curr;
+            }
+            prev = curr;
+        }
+        prev->next = nullptr;
+    }
+};
 
 int main()
 {
     /* Construct the following tree
-             1
-           /   \
-          2     3
-         / \     \
-        4   5     6
-         \       /
-          7     8
+           1
+         /   \
+        2     3
+       / \     \
+      4   5     6
+       \       /
+        7     8
     */
 
     Node* root = new Node(1);
